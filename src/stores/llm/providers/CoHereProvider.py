@@ -23,6 +23,7 @@ class CoHereProvider(LLMInterface):
 
         self.client = cohere.Client(api_key=self.api_key)
 
+        self.enums = CoHereEnums
         self.logger = logging.getLogger(__name__)
 
     def set_generation_model(self, model_id: str):
@@ -33,8 +34,11 @@ class CoHereProvider(LLMInterface):
         self.embedding_size = embedding_size
 
     def process_text(self, text: str):
-        return text[:self.default_input_max_characters].strip()
-
+        if not text:
+            return " "
+        processed = text[:self.default_input_max_characters].strip()
+        return processed if processed else " "
+    
     def generate_text(self, prompt: str, chat_history: list=[], max_output_tokens: int=None,
                             temperature: float = None):
 
@@ -92,5 +96,5 @@ class CoHereProvider(LLMInterface):
     def construct_prompt(self, prompt: str, role: str):
         return {
             "role": role,
-            "text": self.process_text(prompt)
+            "message": self.process_text(prompt)
         }

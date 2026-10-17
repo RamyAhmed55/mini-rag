@@ -25,6 +25,7 @@ class OpenAIProvider(LLMInterface):
         self.client = OpenAI(
             api_key = self.api_key
         )
+        self.enums = OpenAIEnums
 
         self.logger = logging.getLogger(__name__)
 
@@ -35,9 +36,20 @@ class OpenAIProvider(LLMInterface):
         self.embedding_model_id = model_id
         self.embedding_size = embedding_size
 
-    def process_text(self, text: str):
-        return text[:self.default_input_max_characters].strip()
+        
 
+    def process_text(self, text: str):
+            if not text:
+                return ""
+            
+            # لو وصل كائن Template، قم بتحويله لنص أولاً
+            if hasattr(text, 'safe_substitute'):
+                text = text.safe_substitute()
+            elif not isinstance(text, str):
+                text = str(text)
+                
+            return text[:self.default_input_max_characters].strip()
+    
     def generate_text(self, prompt: str, chat_history: list=[], max_output_tokens: int=None,
                             temperature: float = None):
         
@@ -67,7 +79,7 @@ class OpenAIProvider(LLMInterface):
             self.logger.error("Error while generating text with OpenAI")
             return None
 
-        return response.choices[0].message["content"]
+        return response.choices[0].message.content
 
 
     def embed_text(self, text: str, document_type: str = None):
