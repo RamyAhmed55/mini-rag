@@ -118,7 +118,7 @@ class NLPController(BaseController):
         
         documents_prompts = "\n".join(documents_prompts_list)
 
-        raw_footer = self.template_parser.get("rag", "footer_prompt")
+        raw_footer = self.template_parser.get("rag", "footer_prompt", {"query": query})
         safe_footer = raw_footer.safe_substitute() if hasattr(raw_footer, 'safe_substitute') else str(raw_footer or "Please answer based on the above documents.")
 
         # step3: Construct Generation Client Prompts
