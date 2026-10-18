@@ -103,23 +103,19 @@ class NLPController(BaseController):
             return answer, full_prompt, chat_history
         
         # step2: Construct LLM prompt
-        raw_system_prompt = self.template_parser.get("rag", "system_prompt")
-        system_prompt = raw_system_prompt.safe_substitute() if hasattr(raw_system_prompt, 'safe_substitute') else str(raw_system_prompt or "You are a helpful assistant.")
+        system_prompt = self.template_parser.get("rag", "system_prompt")
 
-        doc_template = self.template_parser.get("rag", "document_prompt")
-        documents_prompts_list = []
-        for idx, doc in enumerate(retrieved_documents):
-            vars_dict = {"doc_num": idx + 1, "chunk_text": doc.text}
-            if hasattr(doc_template, 'safe_substitute'):
-                doc_str = doc_template.safe_substitute(vars_dict)
-            else:
-                doc_str = str(doc.text or "")
-            documents_prompts_list.append(doc_str)
-        
-        documents_prompts = "\n".join(documents_prompts_list)
+        documents_prompts = "\n".join([
+            self.template_parser.get("rag", "document_prompt", {
+                    "doc_num": idx + 1,
+                    "chunk_text": doc.text,
+            })
+            for idx, doc in enumerate(retrieved_documents)
+        ])
 
-        raw_footer = self.template_parser.get("rag", "footer_prompt", {"query": query})
-        safe_footer = raw_footer.safe_substitute() if hasattr(raw_footer, 'safe_substitute') else str(raw_footer or "Please answer based on the above documents.")
+        footer_prompt = self.template_parser.get("rag", "footer_prompt", {
+            "query": query
+        })
 
         # step3: Construct Generation Client Prompts
         chat_history = [
@@ -129,11 +125,8 @@ class NLPController(BaseController):
             )
         ]
 
-        full_prompt = "\n\n".join([
-            documents_prompts,
-            safe_footer
-        ])
-        
+        full_prompt = "\n\n".join([ documents_prompts,  footer_prompt])
+
         # step4: Retrieve the Answer
         answer = self.generation_client.generate_text(
             prompt=full_prompt,

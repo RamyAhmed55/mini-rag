@@ -23,8 +23,12 @@ class OpenAIProvider(LLMInterface):
         self.embedding_size = None
 
         self.client = OpenAI(
-            api_key = self.api_key
-        )
+            api_key = self.api_key,
+            base_url = self.base_url,
+            default_headers={
+                            "ngrok-skip-browser-warning": "true"
+                        })
+        
         self.enums = OpenAIEnums
 
         self.logger = logging.getLogger(__name__)

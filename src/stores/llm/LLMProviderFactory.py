@@ -9,7 +9,8 @@ class LLMProviderFactory:
     def create(self, provider: str):
         if provider == LLMEnums.OPENAI.value:
             return OpenAIProvider(
-                api_key = self.config.OPENAI_API_KEY
+                api_key = self.config.OPENAI_API_KEY,
+                base_url = self.config.OPENAI_API_URL,
             )
 
         if provider == LLMEnums.COHERE.value:
